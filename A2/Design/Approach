@@ -1,0 +1,55 @@
+MPI_Init(&argc,&argv);
+
+
+DATA TYPES: datatypes should match at the sender and receiving end.
+The datatypes mentioned in the MIP_DATATYPE should match the machine data type.
+
+MPI_CHAR
+MPI_UNSIGNED_CHAR
+MPI_INT
+MPI_FLOAT
+MPI_DOUBLE
+MPI_SHORT
+MPI_BYTE
+
+
+complex datatypes can also be built in MPI.
+
+
+SEND AND RECEIVE DATA : message packet will contain additional information to data inside the packet,
+(sender, receiver, communicator, tag )
+
+
+data_triplet = buffer,count,
+MPI_SUCCESS = MPI_Send(data_triplet, Dest-triplet);
+
+To allocate the buffer before receiving we need to probe for the message and then take a count of elements in the buffer.
+
+MPI_Probe(MPI_ANY_SOURCE,MPI_ANY_TAG,comm, &status); this will block until we get a message according to a particular filter.
+MPI_Get_count(MPI_Status * status, MPI_Datatype datatype, int *count); count holds the number of elements after this.
+//check MPI_UNDEFINED
+//supposing int datatype
+int*buff = (int*)malloc(sizeof(int)*(*count));
+
+MPI_SUCCESS = MPI_Recv(data_triplet, Source-Triplet, &status)
+
+
+If a combination of send and receive has to be performed then, use
+
+sendrcv(buff1, count, datatype, dest, tag, buff2, count2, datatype2, source, tag, communicator);
+//send, recv buffers should be different, send and recv operation are independent in the sense that there is no particular order.
+
+NON-BLOCKING OPERATIONS:
+MPI_Isend(void *data, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
+MPI_Irecv(void *data, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request *request);
+
+MPI_Wait(MPI_Request Request, MPI_Status *status);
+
+Request set to MPI_REQUEST_NULL when opeartion is complete and wait returns after this.
+If we call wait several times after this it wont block it will return immediately.
+
+1.How to check if the data has arrived?
+MPI maintains the order in which the messages have been sent. Hence we can implement sort of ACK for every message
+the sender sends, from receiver.
+
+MPI_Finalize();

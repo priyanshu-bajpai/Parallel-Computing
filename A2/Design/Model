@@ -1,0 +1,34 @@
+Precondition:
+News for m different regions put in m different files each containing 250 topics containing 40 records each. Suppose 'n' reporters per region.
+
+  -Take out say news 50 topics at random and all records from the ith file (belonging to region i) and put in a newly created jth file (jth reporter belonging to ith region).
+  Each reporter
+  - has its own file from which it has to read the news.
+  - has unsigned long long array of length 250, required for communication between reporters.
+  - is concerned only with the reporters of its region.
+
+Every report topic has an ID, and within every topic updates have their values say from 0 to n, there is a timestamp associated with every topic.
+
+Send messages from reporters to editors are of three types:differentiated by msg[0],
+
+  1. Enquiry if any other reporter is working on the same topic.
+  2. The report after processing,with time stamp.(Editor will store it in the hashtable)
+  3. Message stating that the reporter is exiting.(NumProcesseComplete++)
+
+--->msg[1]and msg[2] contain topic id  i.e topicid = <<<<(msg[1]-'0')*10+msg[2]-'0'>>>>
+--->msg[3]and msg[4] would contain update id.
+--->msg[5]and msg[6] would contain timestamp.
+
+typedef unsigned long long ull;
+
+Data structure:Editor
+  Struct Report{
+  //keep track of which all reporters are working on the report.
+    ull working;
+  //topic of the report.
+  char topic[100];
+  //array containing updates
+    char *updates[15];
+  //stores the update time for recentness.
+    int timestamp[16];
+  };

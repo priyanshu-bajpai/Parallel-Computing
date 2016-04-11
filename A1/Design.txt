@@ -1,0 +1,83 @@
+The over all design has been made keeping in mind to maintain a balance between time overhead
+and use of shared memory to exploit parallelism.Suppose N FILE SYSTEMS are given then,
+
+i)METHODOLOGY:
+
+IN CASE OF PTHREADS:
+Master thread will start N threads, each traverses a file system in level order manner,
+AT EACH LEVEL:
+  1.Each thread hashes the relative paths of the files/folders present in all directories at a given level in map1.
+  The main motive behind double hashing is to prune the folders which aren't present in the majority of FSs.
+     MAP1: //map < pair<string,off_t>, pair<int, bool[50]> >
+    -HASH KEY:file name and size.
+    -HASH VALUE:count(no. of file systems) and bits vector to store in exactly which file systems(THREADID)
+
+  2.Each thread waits for every thread to complete this task for its file system.
+    -(Done using a shared variable(NUM_THREADS_COMPLETED) which is incremented by each thread)
+     Last thread to reach this point.
+        -Broadcasts to release every thread.
+        -Updates NUM_THREADS_COMPLETED=0;
+
+  3.After this every thread continues execution by traversing the first map and picking only those files which
+    cross the threshold(>=ceil(N/2)) directories are enqueued in threads stack avoiding unnecessary searching,
+    and files are mapped to next Hash map2.
+    MAP2: //map < string,pair <string, bool[50]={false}> >
+    -HASH KEY: MD5 of the file.
+    -HASH VALUE: FILENAME and bits vector to store in exactly which file systems(THREADID)
+
+  4.The last thread which updates MAP2 will,
+      -Traverse the MAP2 and list all files and their File Systems.
+      -Updates NUM_THREADS_COMPLETED=0;
+      -After this it again broadcasts to release all threads to repeat the process.
+      -clears MAP1 and MAP2.
+  5.All the threads which have traversed the whole system will decrement the THREADS_REMAINING,
+    The program terminates when THREADS_REMAINING==0;
+
+
+
+IN CASE OF OPENMP:
+
+The basic methodology remains same, however I have made file insertion (after scandir())of a each FS also parallel.
+
+  Following directives have been used for specific purpose:
+  1. # pragma omp parallel num_threads(NUM_THREADS):creating N parallel threads for file systems
+
+  2.  # pragma parallel for default(none): i)for initializing the filesystem array,
+                                          ii)for inserting the files in a directory into map1
+
+  3.  # pragma omp critical(name): i) for updating the files in map1
+                                  ii)for inserting the files into map2
+
+  4.  # pragma omp atomic: for decrementing threads remaining.
+      (single operation can be done much more efficiently with "atomic" derivative)
+
+  5.  #pragma omp barrier
+      to synchronize the threads so that each thread waits until all threads have completed filling map1
+      and similarly map2 (as done with pthreads).
+
+
+ii)DIFFERENT MODULES:
+
+-void masterThread(); To initialize global variables and start threads.
+
+-void *SlaveThread(); traversing file systems.
+
+-off_t fsize(const char *filename); getting file size.
+
+-void addDirectory(char *path,char **directories, int *index): when threads traverse map1, in case of file
+
+                        they are inserted into map2, while in case of folder its added at the end of queue.
+
+-void TraverseMap2(): traversing map2 to print files which are present in majority FILE SYSTEMS.
+
+-string md5(string p): getting MD5 hash value of a file.
+
+
+iii)USAGE:  --COMPILE: g++ -fopenmp openmp.cpp -o openmp -lcrypto -lssl
+                       g++ test.cpp -lcrypto -lssl -lpthread -o test
+
+            --TESTING: ./openmp FS1 FS2 FS3
+
+          where FS1,2,3 should be present in the same folder where we have compiled the files otherwise their
+          absolute path should be given.
+iV) FAIRNESS REQUIREMENT: The approach for assignment has been discussed with Naman Raj Baid, ID:2013A7PS064P

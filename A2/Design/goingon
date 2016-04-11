@@ -1,0 +1,24 @@
+when at last message is sent from leader to the editor, the leader will send validBit # topicId # Message # update.
+
+ #####separated using hashtags
+
+Reporter:
+
+1.Initialize the topicLeader table to -1 every telecast
+if(topicLeader[topicNo]==-1)
+  2.MPI_send(topicNo):
+  3.MPI_Recv(topicLeader[topicNo]);
+
+Check(if we are the leader)
+
+TAG for
+1.communication between reporters and leader = 4
+2.editor to reporters about the leader
+
+Libraries for arcforrandom
+libbsd-dev
+
+
+#################################################
+
+Once it becomes the leader, it will not act as a reporter anymore.

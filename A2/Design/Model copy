@@ -1,0 +1,49 @@
+
+Every report topic has an ID, and within every topic updates have their values say from 0 to n, there is a timestamp associated with every topic.
+
+Send messages from reporters to editors are of three types:differentiated by msg[0],
+
+  1. Enquiry if any other reporter is working on the same topic.
+  2. The report after processing,with time stamp.(Editor will store it in the hashtable)
+  3. Message stating that the reporter is exiting.(NumProcesseComplete++)
+
+--->msg[1]and msg[2] contain topic id  i.e topicid = <<<<(msg[1]-'0')*10+msg[2]-'0'>>>>
+--->msg[3]and msg[4] would contain update id.
+--->msg[5]and msg[6] would contain timestamp.
+
+typedef unsigned long long ull;
+
+Data structure:Editor
+  Struct Report{
+  //keep track of which all reporters are working on the report.
+    ull working;
+  //topic of the report.
+  char topic[100];
+  //array containing updates
+    char *updates[15];
+  //stores the update time for recentness.
+    int timestamp[16];
+    //the reporter which will facilitate the communication of all reporters who are working on this report topic.
+    int mukhiya; 
+  };
+  
+  all the reporters will have the same news file. the news file is maintained as follows: 
+  topic update
+  t1	u11
+  t1	u12
+  ...
+  t1	u1n
+  ...
+  tn	un1
+  ..
+  tn	unn
+  
+  
+  the timestamp of a particular topic update pair is calculated by the editor.
+  
+  the reporter will send to editor the topic and update on which he wants to work. editor will check whether any other reporter is working on that
+  topic. if no then this reporter will be made mukhiya of this particular topic. Now editor will send the ull working, i.e. all the reporters that
+  are currently working on this particluar report topic. Now reporters can communicate with each other through mukhiya, to ensure that one reporter
+  is working on one update only. after finishing the work reporter sends the completed work on the topic, update to the editor. the editor stores
+  this in his hashtable. after everything is completed the breaking news is telecasted by the editor.
+  
